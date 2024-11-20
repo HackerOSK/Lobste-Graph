@@ -24,9 +24,4 @@ jobs:
       - name: Commit and push changes
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "Flat: latest data ($(date -u +'%Y-%m-%dT%H:%M:%SZ'))"
-          git push https://${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git main
+        
