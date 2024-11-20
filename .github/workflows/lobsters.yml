@@ -1,89 +1,48 @@
-name: Lobsters Data Import
+name: Lobsters data import
 
 on:
   push:
-    paths:
-      - .github/workflows/lobsters.yml
+    paths: -.github/workflows/lobsters.yml
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *' # Runs every hour (adjust as needed)
+    - cron: '*/* * 30 * *'
     
+ 
 jobs:
   scheduled:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Check out the repository
-      - name: Check out repo
+      - name: Checkout repo
         uses: actions/checkout@v2
-
-      # Step 2: Fetch the newest articles
-      - name: Fetch newest 
+      - name: Fetch newest
         uses: githubocto/flat@v2
         with:
           http_url: https://lobste.rs/newest.json
           downloaded_filename: newest.json
-
-      # Step 3: Import the newest articles into Neo4j
-      - name: Neo4j import newest
+      - name: Neo4j import
         uses: johnymontana/flat-graph@v1.2
-        with:
-          neo4j-user: ${{ secrets.NEO4J_USER }}
-          neo4j-password: ${{ secrets.NEO4J_PASSWORD }}
-          neo4j-uri: ${{ secrets.NEO4J_URI }}
+        with: 
+          neo4j-user: ${{secrets.NEO4J_USER}}
+          neo4j-password: ${{secrets.NEO4J_PASSWORD}}
+          neo4j-uri: ${{secrets.NEO4J_URI}}
           filename: newest.json
           cypher-query: >
-            UNWIND $value AS article
+            UNWIND $value AS article 
             MERGE (s:User {username: article.submitter_user.username})
-              SET s.created = DateTime(article.submitter_user.created_at),
-                  s.karma   = article.submitter_user.karma,
-                  s.about = article.submitter_user.about,
-                  s.avatar = "https://lobste.rs" + article.submitter_user.avatar_url
-            MERGE (i:User {username: article.submitter_user.invited_by_user})
-            MERGE (i)<-[:INVITED_BY]-(s)
-            MERGE (a:Article {id: article.short_id})
-              SET a.url = article.url,
-                  a.score = article.score,
-                  a.title = article.title,
-                  a.comments = article.comments_url,
-                  a.created = DateTime(article.created_at)
-            MERGE (s)-[:SUBMITTED]->(a)
-            WITH article, a
-            UNWIND article.tags AS tag
-            MERGE (t:Tag {name: tag})
-            MERGE (a)-[:HAS_TAG]->(t)
-
-      # Step 4: Fetch the hottest articles
-      - name: Fetch hottest 
-        uses: githubocto/flat@v2
-        with:
-          http_url: https://lobste.rs/hottest.json
-          downloaded_filename: hottest.json
-
-      # Step 5: Import the hottest articles into Neo4j
-      - name: Neo4j import hottest
-        uses: johnymontana/flat-graph@v1.2
-        with:
-          neo4j-user: ${{ secrets.NEO4J_USER }}
-          neo4j-password: ${{ secrets.NEO4J_PASSWORD }}
-          neo4j-uri: ${{ secrets.NEO4J_URI }}
-          filename: hottest.json
-          cypher-query: >
-            UNWIND $value AS article
-            MERGE (s:User {username: article.submitter_user.username})
-              SET s.created = DateTime(article.submitter_user.created_at),
-                  s.karma   = article.submitter_user.karma,
-                  s.about = article.submitter_user.about,
-                  s.avatar = "https://lobste.rs" + article.submitter_user.avatar_url
-            MERGE (i:User {username: article.submitter_user.invited_by_user})
-            MERGE (i)<-[:INVITED_BY]-(s)
-            MERGE (a:Article {id: article.short_id})
-              SET a.url = article.url,
-                  a.score = article.score,
-                  a.title = article.title,
-                  a.comments = article.comments_url,
-                  a.created = DateTime(article.created_at)
-            MERGE (s)-[:SUBMITTED]->(a)
-            WITH article, a
-            UNWIND article.tags AS tag
-            MERGE (t:Tag {name: tag})
+              SET s.created = DateTime(article.submitter_user.created_at), 
+              s.karma = article.submitter_user.karma, 
+              s.about = article.submitter_user.about, 
+              s.avatar = "https://lobste.rs" + article.submitter_user.avatar_url 
+            MERGE (i:User {username: article.submitter_user.invited_by_user}) 
+            MERGE (i)<-[:INVITED_BY]-(s) 
+            MERGE (a:Article {short_id: article.short_id}) 
+              SET a.url = article.url, 
+                  a.score = article.score, 
+                  a.title = article.title, 
+                  a.comments = article.comments_url, 
+                  a.created = Datetime(article.created_at) 
+            MERGE (s)-[:SUBMITTED]->(a) 
+            WITH article, a 
+            UNWIND article.tags AS tag 
+            MERGE (t:Tag {name: tag}) 
             MERGE (a)-[:HAS_TAG]->(t)
