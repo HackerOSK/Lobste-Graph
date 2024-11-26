@@ -35,6 +35,7 @@ jobs:
                   a.title = article.title,
                   a.comments = article.comments_url,
                   a.created = datetime(article.created_at)
+                  a.user = article.submitter_user
             MERGE (s)-[:SUBMITTED]->(a)
             WITH article, a
             UNWIND article.tags AS tag
