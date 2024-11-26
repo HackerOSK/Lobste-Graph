@@ -34,7 +34,7 @@ jobs:
                   a.score = article.score,
                   a.title = article.title,
                   a.comments = article.comments_url,
-                  a.created = datetime(article.created_at)
+                  a.created = datetime(article.created_at),
                   a.user = article.submitter_user
             MERGE (s)-[:SUBMITTED]->(a)
             WITH article, a
